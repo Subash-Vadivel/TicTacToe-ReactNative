@@ -3,7 +3,7 @@ import { Button, StyleSheet, Text, View, TouchableOpacity, Image } from 'react-n
 import Logo from '../assets/XO.png'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect,useState } from 'react';
-import axios from 'axios';
+import axios from '../AxiosPrivate/axios';
 export default function Home({ navigation }) {
     const [user,setUser]=useState('');
 
@@ -13,7 +13,7 @@ export default function Home({ navigation }) {
         if(uid===null||uid===undefined)
         {
             
-            await axios.post("https://xo-efft.onrender.com/auth/newUser").then((res)=>{
+            await axios.post("/auth/newUser").then((res)=>{
               AsyncStorage.setItem("user",res.data.uid);
             }).catch((err)=>{
                 console.log(err)
