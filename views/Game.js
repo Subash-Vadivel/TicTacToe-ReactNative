@@ -22,10 +22,11 @@ const Game = () => {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [result,setResult]=useState();
   const[table,setTable]=useState();
+  const[upd,setUpd]=useState(true);
 const handleQuit=()=>{
 
 
-  
+
   navigation.goBack();
 
 }
@@ -53,29 +54,31 @@ const handleQuit=()=>{
   const update=async(newBoard)=>{
     const username = await AsyncStorage.getItem('user');
     await axios.post("https://xo-efft.onrender.com/game/update",{tid:table,board:newBoard,username}).then((res)=>{
-     console.log(res);
+     console.log(res.data);
      setBoard(res.data.details[0].board);
      setResult(res.data.details[0].result);
      if (username === res.data.details[0].player1Id)
      {
-       setPlayerTag(res.data.details[0].player1symbol);
        setFlag(res.data.details[0].player1status);
      }
      else 
-     {setPlayerTag(res.data.details[0].player2symbol);
+     {
        setFlag(res.data.details[0].player2status);
      }
   }).catch((err)=>{
         console.log(err)
     }).then(()=>{
         console.log("Finish");
-    })
+    });
+    setUpd(true);
   }
 
   const handleSquarePress = (i) => {
     if (flag) {
+      setUpd(false);
       const newBoard = [...board];
       newBoard[i] = playerTag;
+      setBoard(newBoard);
       update(newBoard);
     } else {
       alert('Opponent Move');
@@ -113,6 +116,8 @@ const handleQuit=()=>{
     });
   };
   const waitForResult = async (interval) => {
+    if(waiting)
+    {
     const username = await AsyncStorage.getItem('user');
     await axios
       .post('https://xo-efft.onrender.com/game/match',{username})
@@ -132,7 +137,6 @@ const handleQuit=()=>{
             setFlag(res.data.details[0].player2status);
           }
           setWaiting(false); 
-          clearInterval(interval); 
         }
       })
       .catch((err) => {
@@ -141,6 +145,11 @@ const handleQuit=()=>{
       .then(() => {
         console.log('Searching...');
       });
+    }
+    else if(upd)
+    {
+periodupdate();
+    }
   };
   useEffect(() => {
     Search();
@@ -149,14 +158,13 @@ const handleQuit=()=>{
   }, []);
 
 
-  useEffect(()=>{
-    const interval2 = setInterval(() => periodupdate(interval2), 5000);
-    return () => clearInterval(interval2);
-  },[waiting]);
  
-  const periodupdate=async(interval2)=>{
-    await axios.post("https://xo-efft.onrender.com/game/periodupdate",{table}).then((res)=>{
-      console.log(res);
+  const periodupdate=async()=>{
+    console.log(table);
+    const username = await AsyncStorage.getItem('user');
+
+    await axios.post("https://xo-efft.onrender.com/game/updateperiod",{table,username}).then((res)=>{
+      // console.log(res.data.details);
       setBoard(res.data.details[0].board);
       setResult(res.data.details[0].result);
       if (username === res.data.details[0].player1Id)
