@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { Button, StyleSheet, Text, View, TouchableOpacity, Image ,BackHandler} from 'react-native';
 import Logo from '../assets/XO.png'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect,useState } from 'react';
@@ -36,9 +36,9 @@ export default function Home({ navigation }) {
         <Text style={styles.buttonText}   onPress={() => navigation.navigate('NewGame')}>New Game</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.button, { backgroundColor: '#007AFF' }]}>
-        <Text style={styles.buttonText}>Leader Board</Text>
+        <Text style={styles.buttonText} onPress={()=>alert("Coming Soon")}>Leader Board</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#FF3B30' }]}>
+      <TouchableOpacity style={[styles.button, { backgroundColor: '#FF3B30' }]} onPress={()=>BackHandler.exitApp()}>
         <Text style={styles.buttonText}>Quit</Text>
       </TouchableOpacity>
       <StatusBar style="auto" />

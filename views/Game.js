@@ -12,6 +12,7 @@ const Square = ({ value, onPress }) => {
 }
 
 const Game = ({navigation}) => {
+  const [draw,setDraw]=useState(false);
   const [outcome,setOutCome]=useState(false);
   const [data,setData]=useState();
   const [playerTag,setPlayerTag]=useState('X');
@@ -23,8 +24,17 @@ const Game = ({navigation}) => {
   const [result,setResult]=useState();
   const[table,setTable]=useState();
   const[upd,setUpd]=useState(true);
-const handleQuit=()=>{
-
+  const [pid,setpid]=useState();
+const handleQuit=async()=>{
+  const username = await AsyncStorage.getItem('user');
+  await axios.post('https://xo-efft.onrender.com/game/quit', { username,table }).then((res)=>{
+    navigation.goBack();
+    }).catch((err)=>{
+        console.log(err);
+        alert("SomeThing Went Wrong")
+    }).then(()=>{
+        console.log("Finish");
+    })
   navigation.goBack();
 
 }
@@ -43,9 +53,13 @@ const handleQuit=()=>{
   const renderSquare = (i) => {
     return (
       <Square
-        value={board[i]}
-        onPress={() => handleSquarePress(i)}
-      />
+  value={board[i]}
+  onPress={() => {
+    if (board[i] !== 'O' && board[i] !== 'X') {
+      handleSquarePress(i);
+    }
+  }}
+/>
     )
   }
 
@@ -55,6 +69,8 @@ const handleQuit=()=>{
      console.log(res.data);
      setData(res.data.details[0]);
      setBoard(res.data.details[0].board);
+     setDraw(res.data.details[0].draw);
+
      setResult(res.data.details[0].result);
      if (username === res.data.details[0].player1Id)
      {
@@ -96,7 +112,7 @@ const handleQuit=()=>{
      setData(res.data.details[0]);
         setPlayerOneName(res.data.details[0].player1Id);
         setPlayerTwoName(res.data.details[0].player2Id);
-        
+        setDraw(res.data.details[0].draw);
         setResult(res.data.details[0].result);
         if (username === res.data.details[0].player1Id)
         {
@@ -130,6 +146,8 @@ const handleQuit=()=>{
           setPlayerOneName(res.data.details[0].player1Id);
           setPlayerTwoName(res.data.details[0].player2Id);
           setResult(res.data.details[0].result);
+          setDraw(res.data.details[0].draw);
+
           if (username === res.data.details[0].player1Id)
           {
             setPlayerTag(res.data.details[0].player1symbol);
@@ -155,22 +173,24 @@ const handleQuit=()=>{
 periodupdate();
     }
   };
-  useEffect(() => {
+  useEffect(async() => {
+    setpid(await AsyncStorage.getItem('user'));
     Search();
     const interval = setInterval(() => waitForResult(interval), 5000);
     return () => clearInterval(interval);
   }, []);
 const load=async()=>{
-  if(result==="completed")
+  if(result==="completed" && !draw)
   {
     const username = await AsyncStorage.getItem('user');
     if(data.winner===username)
-      navigation.navigate('Result',{ isWon: true });
+      navigation.navigate('Result',{ isWon: true,type:true });
     else
-       navigation.navigate('Result',{ isWon: false });
-
-
-
+       navigation.navigate('Result',{ isWon: false,type:true });
+  }
+  else if(draw)
+  {
+    navigation.navigate('Result',{ isWon: true,type:false });
   }
 }
 useEffect(()=>{
@@ -185,7 +205,7 @@ useEffect(()=>{
       // console.log(res.data.details);
       setBoard(res.data.details[0].board);
       setResult(res.data.details[0].result);
-      
+      setDraw(res.data.details[0].draw);
      setData(res.data.details[0]);
       if (username === res.data.details[0].player1Id)
       {
@@ -222,8 +242,12 @@ useEffect(()=>{
  
 
 
-             <Text style={[styles.text, {position: 'absolute', left: 20, top: 70}]}>{playerOneName}</Text>
-          <Text style={[styles.text, {position: 'absolute', right: 20 , top: 70}]}>{playerTwoName}</Text>
+ <Text style={[styles.text, {position: 'absolute', left: 20, top: 70, color: pid === playerOneName && flag ? 'red' : 'black'}]}>
+  {playerOneName}
+</Text>
+<Text style={[styles.text, {position: 'absolute', right: 20 , top: 70, color: pid === playerTwoName && flag ? 'red' : 'black'}]}>
+  {playerTwoName}
+</Text>
           <Text style={styles.text}>Game</Text>
           <View style={styles.board}>
             <View style={styles.row}>
