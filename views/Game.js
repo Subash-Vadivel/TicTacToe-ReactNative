@@ -11,9 +11,9 @@ const Square = ({ value, onPress }) => {
   )
 }
 
-const Game = () => {
-
-  const navigation = useNavigation();
+const Game = ({navigation}) => {
+  const [outcome,setOutCome]=useState(false);
+  const [data,setData]=useState();
   const [playerTag,setPlayerTag]=useState('X');
   const [waiting, setWaiting] = useState(true);
   const [playerOneName, setPlayerOneName] = useState('Player One');
@@ -24,8 +24,6 @@ const Game = () => {
   const[table,setTable]=useState();
   const[upd,setUpd]=useState(true);
 const handleQuit=()=>{
-
-
 
   navigation.goBack();
 
@@ -55,6 +53,7 @@ const handleQuit=()=>{
     const username = await AsyncStorage.getItem('user');
     await axios.post("https://xo-efft.onrender.com/game/update",{tid:table,board:newBoard,username}).then((res)=>{
      console.log(res.data);
+     setData(res.data.details[0]);
      setBoard(res.data.details[0].board);
      setResult(res.data.details[0].result);
      if (username === res.data.details[0].player1Id)
@@ -93,6 +92,8 @@ const handleQuit=()=>{
         console.log("Waiting")
       } else if (res.data.status === 'success') {
         setBoard(res.data.details[0].board);
+        
+     setData(res.data.details[0]);
         setPlayerOneName(res.data.details[0].player1Id);
         setPlayerTwoName(res.data.details[0].player2Id);
         
@@ -123,6 +124,8 @@ const handleQuit=()=>{
       .post('https://xo-efft.onrender.com/game/match',{username})
       .then((res) => {
         if (res.data.status === 'success') {
+          
+     setData(res.data.details[0]);
           setBoard(res.data.details[0].board);
           setPlayerOneName(res.data.details[0].player1Id);
           setPlayerTwoName(res.data.details[0].player2Id);
@@ -136,6 +139,7 @@ const handleQuit=()=>{
           {setPlayerTag(res.data.details[0].player2symbol);
             setFlag(res.data.details[0].player2status);
           }
+          setTable(res.data.details[0]._id);
           setWaiting(false); 
         }
       })
@@ -156,8 +160,22 @@ periodupdate();
     const interval = setInterval(() => waitForResult(interval), 5000);
     return () => clearInterval(interval);
   }, []);
+const load=async()=>{
+  if(result==="completed")
+  {
+    const username = await AsyncStorage.getItem('user');
+    if(data.winner===username)
+      navigation.navigate('Result',{ isWon: true });
+    else
+       navigation.navigate('Result',{ isWon: false });
 
 
+
+  }
+}
+useEffect(()=>{
+ load();
+},[result])
  
   const periodupdate=async()=>{
     console.log(table);
@@ -167,6 +185,8 @@ periodupdate();
       // console.log(res.data.details);
       setBoard(res.data.details[0].board);
       setResult(res.data.details[0].result);
+      
+     setData(res.data.details[0]);
       if (username === res.data.details[0].player1Id)
       {
         setPlayerTag(res.data.details[0].player1symbol);
@@ -199,6 +219,9 @@ periodupdate();
         </View>
         :
         <View style={styles.container}>
+ 
+
+
              <Text style={[styles.text, {position: 'absolute', left: 20, top: 70}]}>{playerOneName}</Text>
           <Text style={[styles.text, {position: 'absolute', right: 20 , top: 70}]}>{playerTwoName}</Text>
           <Text style={styles.text}>Game</Text>
@@ -222,6 +245,7 @@ periodupdate();
           <TouchableOpacity onPress={handleQuit}>
             <Text style={styles.quit}>Forfeite</Text>
           </TouchableOpacity>
+          
         </View>
       }
     </>
@@ -269,7 +293,7 @@ const styles = StyleSheet.create({
   squareText: {
     fontSize: 32,
     fontWeight: 'bold',
-  },
+  }
 });
 
 export default Game;
